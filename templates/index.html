@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CineCast AI — Cinema Demand Forecasting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside>
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="2" y="4" width="26" height="22" rx="4" fill="none" stroke="#e0b155" stroke-width="2"/>
+        <path d="M2 10h26M2 20h26M8 4v22M22 4v22" stroke="#e0b155" stroke-width="1.5"/>
+      </svg>
+      <div>CineCast AI<small>Demand forecasting</small></div>
+    </div>
+
+    <nav aria-label="Main">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#forecast">Forecast a showing</a>
+      <a href="#models">Model comparison</a>
+    </nav>
+
+    <div class="side-foot">
+      <div id="apiStatus">Connecting to local model…</div>
+      <div class="foot-note">Forecasts are estimates to support human decisions.</div>
+    </div>
+  </aside>
+
+  <main>
+    <h1 id="title"></h1>
+    <p class="sub" id="subtitle"></p>
+
+    <div class="filters" id="filters" role="group" aria-label="Forecast Filters">
+      <label class="field">Movie<select id="fm"></select></label>
+      <label class="field">Cinema<select id="fc"></select></label>
+      <label class="field">Shows/Day<select id="fst"></select></label>
+      <label class="field">Start Date<input type="date" id="fdate"></label>
+      <label class="field">Horizon
+        <select id="fh">
+          <option value="7" selected>Next 7 days</option>
+          <option value="14">Next 14 days</option>
+          <option value="30">Next 30 days</option>
+        </select>
+      </label>
+      <label class="field">Capacity<input type="number" id="fcap" min="10" step="10" placeholder="Seats"></label>
+      <label class="field">Ticket Price<input type="number" id="fprice" min="1" step="1000" placeholder="Price"></label>
+    </div>
+
+    <!-- 1. Dashboard -->
+    <section id="v-dashboard" class="vis">
+      <div class="kpis" id="kpis"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="head">
+            <h2>Ticket demand</h2>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="cw" id="cw"></div>
+          <p class="live" id="live" aria-live="polite"></p>
+        </div>
+
+        <div class="card">
+          <div class="head"><h2>Occupancy by weekday</h2></div>
+          <div id="occ"></div>
+          <p class="live">Average projected occupancy for each day of the selected period.</p>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="head">
+          <h2>Daily operations, staffing &amp; concessions plan</h2>
+          <span class="tag">Human review required</span>
+        </div>
+        <div class="table-wrap">
+          <table id="opsTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Single Showing Forecast -->
+    <section id="v-forecast" class="vis">
+      <div class="card">
+        <form class="form" id="form">
+          <label class="field">
+            Movie
+            <select id="pm"></select>
+          </label>
+          <label class="field hidden" id="customMovieWrap">
+            New Movie Code
+            <input type="number" id="pmCustom" min="1" placeholder="e.g. 99999">
+          </label>
+          <label class="field">Cinema<select id="pc"></select></label>
+          <label class="field">Date<input type="date" id="pd"></label>
+          <label class="field">Showtime / Slot<select id="pt"></select></label>
+          <label class="field">Hall Capacity<input type="number" id="ps" min="10" placeholder="Seats"></label>
+          <label class="field">Ticket Price<input type="number" id="pp" min="1" step="1000" placeholder="Price"></label>
+          <button class="btn" id="go" type="submit">Forecast Demand</button>
+        </form>
+      </div>
+
+      <div id="out" aria-live="polite"></div>
+    </section>
+
+    <!-- 3. Model Comparison -->
+    <section id="v-models" class="vis">
+      <div class="grid2">
+        <div class="card"><table id="mt"></table></div>
+        <div class="card">
+          <div class="head"><h2>Feature importance (%)</h2></div>
+          <div class="bars" id="mb"></div>
+          <p class="live" id="mn"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</div>
+<script src="/static/script.js?v={{ cache_bust }}"></script>
+</body>
+</html>

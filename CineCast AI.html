@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+  <title>
+   CineCast AI &mdash; Cinema demand forecasting
+  </title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+   :root {
+    --bg:#140d12;
+    --side:#1a1117;
+    --panel:#21161d;
+    --panel2:#2a1c25;
+    --line:#3a2832;
+    --ink:#f2e9da;
+    --mute:#a99a97;
+    --brass:#e0b155;
+    --rose:#e0526a;
+    --slate:#8aa0bd;
+    --ok:#7ccf9c;
+    --bad:#f08a8a;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Instrument Sans',system-ui,sans-serif;
+    color-scheme:dark;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+}
+*,*::before,*::after {
+    box-sizing:inherit;
+}
+html {
+    scroll-padding-top:env(safe-area-inset-top,0px);
+}
+body {
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font:15px/1.5 var(--sans);
+}
+button,select,input {
+    font:inherit;
+    color:inherit;
+}
+:focus-visible {
+    outline:2px solid var(--brass);
+    outline-offset:2px;
+    border-radius:6px;
+}
+.app {
+    display:grid;
+    grid-template-columns:236px 1fr;
+    min-height:100vh;
+}
+aside {
+    background:var(--side);
+    border-right:1px solid var(--line);
+    padding:24px 16px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+}
+.brand {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--serif);
+    font-size:22px;
+    padding:0 8px;
+}
+.brand small {
+    display:block;
+    font:12px var(--sans);
+    color:var(--mute);
+}
+nav {
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+nav a {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:10px;
+    color:var(--mute);
+    text-decoration:none;
+    transition:background .2s,color .2s;
+}
+nav a:hover {
+    background:var(--panel);
+    color:var(--ink);
+}
+nav a[aria-current=page] {
+    background:var(--panel2);
+    color:var(--brass);
+    box-shadow:inset 3px 0 0 var(--brass);
+}
+.side-foot {
+    margin-top:auto;
+    font-size:13px;
+    color:var(--mute);
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+}
+main {
+    padding:28px clamp(16px,3vw,40px) 48px;
+    min-width:0;
+}
+h1 {
+    font:600 clamp(26px,3.4vw,38px)/1.1 var(--serif);
+    margin:0 0 4px;
+    letter-spacing:-.01em;
+}
+h2 {
+    font:600 19px var(--serif);
+    margin:0;
+}
+.sub {
+    color:var(--mute);
+    margin:0 0 22px;
+}
+.filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:22px;
+}
+.field {
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:13px;
+    color:var(--mute);
+}
+select,input[type=number],input[type=date] {
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 12px;
+    min-width:170px;
+    color:var(--ink);
+}
+select:hover,input:hover {
+    border-color:#5a3d4a;
+}
+.kpis {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px;
+    margin-bottom:18px;
+}
+.card {
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+}
+.kpi .lab {
+    color:var(--mute);
+    font-size:13px;
+}
+.kpi .val {
+    font:600 34px/1.15 var(--serif);
+    margin:4px 0;
+}
+.kpi .note {
+    font-size:13px;
+    color:var(--mute);
+}
+.chip {
+    display:inline-block;
+    padding:1px 8px;
+    border-radius:99px;
+    font-size:12px;
+    font-weight:600;
+    margin-right:6px;
+    background:#ffffff10;
+}
+.up {
+    color:var(--ok);
+}
+.down {
+    color:var(--bad);
+}
+.grid2 {
+    display:grid;
+    grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+    gap:14px;
+}
+.head {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+    margin-bottom:12px;
+}
+.legend {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+.legend button {
+    background:none;
+    border:1px solid var(--line);
+    border-radius:99px;
+    padding:3px 10px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:opacity .2s;
+}
+.legend button[aria-pressed=false] {
+    opacity:.4;
+}
+.legend i {
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    display:inline-block;
+}
+.cw {
+    position:relative;
+}
+svg {
+    display:block;
+    width:100%;
+    height:auto;
+    overflow:visible;
+}
+.tip {
+    position:absolute;
+    pointer-events:none;
+    background:#0f0a0d;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:13px;
+    min-width:150px;
+    transform:translate(-50%,-110%);
+    opacity:0;
+    transition:opacity .12s;
+    z-index:3;
+}
+.tip b {
+    font-family:var(--serif);
+}
+.tip div {
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+}
+.axis text {
+    fill:var(--mute);
+    font-size:11px;
+}
+.live {
+    color:var(--mute);
+    font-size:13px;
+    margin:8px 0 0;
+}
+.draw {
+    stroke-dasharray:1400;
+    stroke-dashoffset:1400;
+    animation:draw 1.4s ease-out forwards;
+}
+@keyframes draw {
+    to {
+        stroke-dashoffset:0;
+    }
+}
+table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+}
+caption {
+    text-align:left;
+    color:var(--mute);
+    padding-bottom:8px;
+    font-size:13px;
+}
+th,td {
+    text-align:right;
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+}
+th:first-child,td:first-child {
+    text-align:left;
+}
+th {
+    color:var(--mute);
+    font-weight:500;
+}
+tr.best td {
+    color:var(--brass);
+    font-weight:600;
+}
+.bars {
+    display:grid;
+    gap:12px;
+    margin-top:6px;
+}
+.bar {
+    display:grid;
+    grid-template-columns:120px 1fr 56px;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+}
+.bar span.t {
+    height:10px;
+    background:#ffffff12;
+    border-radius:6px;
+    overflow:hidden;
+}
+.bar span.t i {
+    display:block;
+    height:100%;
+    border-radius:6px;
+    transform-origin:left;
+    animation:grow .7s ease-out;
+}
+@keyframes grow {
+    from {
+        transform:scaleX(0);
+    }
+}
+.btn {
+    background:var(--brass);
+    color:#2a1a05;
+    border:0;
+    border-radius:10px;
+    padding:11px 20px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .15s,filter .2s;
+}
+.btn:hover {
+    filter:brightness(1.08);
+}
+.btn:active {
+    transform:scale(.97);
+}
+.form {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+    align-items:end;
+}
+.form select,.form input[type=number],.form input[type=date] {
+    width:100%;
+}
+.chk {
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+    color:var(--ink);
+    padding-bottom:9px;
+}
+.results {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+    margin-top:14px;
+}
+.res {
+    animation:pop .4s ease-out;
+}
+@keyframes pop {
+    from {
+        opacity:0;
+        transform:translateY(8px);
+    }
+}
+.res .big {
+    font:600 40px/1.1 var(--serif);
+    margin:6px 0;
+}
+.res.rec {
+    border-color:var(--brass);
+}
+.tag {
+    font-size:12px;
+    color:var(--brass);
+    font-weight:600;
+}
+.skel {
+    height:132px;
+    border-radius:16px;
+    background:linear-gradient(90deg,var(--panel),var(--panel2),var(--panel));
+    background-size:200% 100%;
+    animation:sh 1s infinite;
+}
+@keyframes sh {
+    to {
+        background-position:-200% 0;
+    }
+}
+.vis {
+    display:none;
+}
+.vis.on {
+    display:block;
+}
+@media (max-width:900px) {
+    .grid2 {
+        grid-template-columns:1fr;
+    }
+}
+@media (max-width:760px) {
+    .app {
+        grid-template-columns:1fr;
+    }
+    aside {
+        position:fixed;
+        bottom:0;
+        left:0;
+        right:0;
+        top:auto;
+        height:auto;
+        flex-direction:row;
+        padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+        z-index:20;
+        border-right:0;
+        border-top:1px solid var(--line);
+        gap:0;
+    }
+    .brand,.side-foot {
+        display:none;
+    }
+    nav {
+        flex-direction:row;
+        width:100%;
+        justify-content:space-around;
+    }
+    nav a {
+        flex-direction:column;
+        gap:2px;
+        font-size:12px;
+        padding:6px 14px;
+    }
+    main {
+        padding-bottom:96px;
+    }
+    .bar {
+        grid-template-columns:90px 1fr 50px;
+    }
+    select {
+        min-width:0;
+        width:100%;
+    }
+    .field {
+        flex:1 1 140px;
+    }
+}
+@media (prefers-reduced-motion:reduce) {
+    * {
+        animation:none!important;
+        transition:none!important;
+    }
+    .draw {
+        stroke-dashoffset:0;
+    }
+}
+  </style>
+ </head>
+ <body>
+  <div class="app">
+   <aside>
+    <div class="brand">
+     <svg aria-hidden="true" height="30" viewbox="0 0 30 30" width="30">
+      <rect fill="none" height="22" rx="4" stroke="#e0b155" stroke-width="2" width="26" x="2" y="4">
+      </rect>
+      <path d="M2 10h26M2 20h26M8 4v22M22 4v22" stroke="#e0b155" stroke-width="1.5">
+      </path>
+     </svg>
+     <div>
+      CineCast AI
+      <small>
+       Demand forecasting
+      </small>
+     </div>
+    </div>
+    <nav aria-label="Main">
+     <a href="#dashboard">
+      Dashboard
+     </a>
+     <a href="#forecast">
+      Forecast a showing
+     </a>
+     <a href="#models">
+      Model comparison
+     </a>
+    </nav>
+    <div class="side-foot">
+     Models retrained today at 06:00. Data through
+     <span id="asof">
+     </span>
+     .
+    </div>
+   </aside>
+   <main>
+    <h1 id="title">
+    </h1>
+    <p class="sub" id="subtitle">
+    </p>
+    <div aria-label="Filters" class="filters" id="filters" role="group">
+     <label class="field">
+      Movie
+      <select id="fm">
+      </select>
+     </label>
+     <label class="field">
+      Cinema
+      <select id="fc">
+      </select>
+     </label>
+     <label class="field">
+      Forecast horizon
+      <select id="fh">
+       <option value="7">
+        Next 7 days
+       </option>
+       <option selected="" value="14">
+        Next 14 days
+       </option>
+      </select>
+     </label>
+    </div>
+    <section class="vis" id="v-dashboard">
+     <div class="kpis" id="kpis">
+     </div>
+     <div class="grid2">
+      <div class="card">
+       <div class="head">
+        <h2>
+         Ticket demand
+        </h2>
+        <div class="legend" id="legend">
+        </div>
+       </div>
+       <div class="cw" id="cw">
+       </div>
+       <p aria-live="polite" class="live" id="live">
+       </p>
+      </div>
+      <div class="card">
+       <div class="head">
+        <h2>
+         Occupancy by weekday
+        </h2>
+       </div>
+       <div id="occ">
+       </div>
+       <p class="live">
+        Bars compare the last four weeks with next week&rsquo;s forecast.
+       </p>
+      </div>
+     </div>
+    </section>
+    <section class="vis" id="v-forecast">
+     <div class="card">
+      <form class="form" id="form" onsubmit="return false">
+       <label class="field">
+        Movie
+        <select id="pm">
+        </select>
+       </label>
+       <label class="field">
+        Cinema
+        <select id="pc">
+        </select>
+       </label>
+       <label class="field">
+        Date
+        <input id="pd" type="date"/>
+       </label>
+       <label class="field">
+        Showtime
+        <select id="pt">
+         <option value="0.2">
+          Matinee, 1:00 pm
+         </option>
+         <option selected="" value="0.38">
+          Prime, 6:30 pm
+         </option>
+         <option value="0.3">
+          Evening, 9:15 pm
+         </option>
+         <option value="0.12">
+          Late, 11:45 pm
+         </option>
+        </select>
+       </label>
+       <label class="field">
+        Screens assigned
+        <input id="ps" max="4" min="1" type="number" value="2"/>
+       </label>
+       <label class="field">
+        Ticket price ($)
+        <input id="pp" max="30" min="5" step="0.5" type="number" value="12"/>
+       </label>
+       <label class="field chk">
+        <input id="pr" type="checkbox"/>
+        Promotion running
+       </label>
+       <label class="field chk">
+        <input id="ph" type="checkbox"/>
+        Public holiday
+       </label>
+       <button class="btn" id="go" type="submit">
+        Generate prediction
+       </button>
+      </form>
+     </div>
+     <div aria-live="polite" id="out">
+      <div class="card" style="margin-top:14px;color:var(--mute)">
+       Choose a movie, cinema and showtime, then generate a prediction to compare all three models.
+      </div>
+     </div>
+    </section>
+    <section class="vis" id="v-models">
+     <div class="grid2">
+      <div class="card">
+       <table id="mt">
+       </table>
+      </div>
+      <div class="card">
+       <div class="head">
+        <h2>
+         Forecast accuracy
+        </h2>
+       </div>
+       <div class="bars" id="mb">
+       </div>
+       <p class="live" id="mn">
+       </p>
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+  <script>
+   const TODAY=new Date(2026,10,12);
+const M=[ {
+    n:'Orbit Run',base:610,rel:-3,dec:.05
+}
+, {
+    n:'Midnight at the Meridian',base:520,rel:-9,dec:.045
+}
+, {
+    n:'Saffron Skies',base:430,rel:-20,dec:.04
+}
+, {
+    n:'The Last Projectionist',base:300,rel:-34,dec:.03
+}
+, {
+    n:'Laugh Track',base:380,rel:2,dec:.04
+}
+];
+const C=[ {
+    n:'Grand Regal',sc:1.3,cap:4320,seats:180
+}
+, {
+    n:'Riverside Rex',sc:.7,cap:1920,seats:160
+}
+, {
+    n:'Old Town Odeon',sc:.85,cap:2240,seats:140
+}
+, {
+    n:'Skyline IMAX',sc:1,cap:2400,seats:300
+}
+];
+const WK=[1.35,.8,.78,.82,.9,1.25,1.5];
+const MOD=[ {
+    k:'act',n:'Actual',c:'#f2e9da'
+}
+, {
+    k:'rf',n:'Random Forest',c:'#e0b155'
+}
+, {
+    k:'xgb',n:'XGBoost',c:'#e0526a'
+}
+, {
+    k:'base',n:'Historical Baseline',c:'#8aa0bd'
+}
+];
+const PRICE=11.8;
+const $=s=>document.querySelector(s), fmt=n=>Math.round(n).toLocaleString('en-US');
+const nz=(a,b,c)=> {
+    const x=Math.sin(a*127.1+b*311.7+c*74.7)*43758.5453;
+    return (x-Math.floor(x))*2-1
+}
+;
+const dt=d=>new Date(TODAY.getTime()+d*864e5);
+const lab=d=>dt(d).toLocaleDateString('en-US', {
+    month:'short',day:'numeric'
+}
+);
+const exp=(m,c,d)=> {
+    const t=d-M[m].rel;
+    if(t<0)return 0;
+    return M[m].base*C[c].sc*WK[dt(d).getDay()]*(1+.6*Math.exp(-t/2))*Math.exp(-M[m].dec*t)/1.3
+}
+;
+const truth=(m,c,d)=>exp(m,c,d)*(1+.07*nz(m,c,d));
+const pred= {
+    rf:(m,c,d)=>exp(m,c,d)*(1+.05*nz(m,c,d+500)),
+    xgb:(m,c,d)=>exp(m,c,d)*(1+.03*nz(m,c,d+900)-.005),
+    base:(m,c,d)=>d-7<=0?truth(m,c,d-7):exp(m,c,d-7),
+    act:(m,c,d)=>truth(m,c,d)
+}
+;
+const sel=(i,n)=>i<0?[...Array(n).keys()]:[i];
+function ser(k,d) {
+    let s=0;
+    for(const m of sel(S.mv,M.length))for(const c of sel(S.ci,C.length))s+=pred[k](m,c,d);
+    return Math.round(s)
+}
+function cap() {
+    return sel(S.ci,C.length).reduce((a,c)=>a+C[c].cap,0)
+}
+function metrics(k) {
+    let a=[],p=[];
+    for(let d=-27;
+    d<=0;
+    d++) {
+        a.push(ser('act',d));
+        p.push(ser(k,d))
+    }
+    const n=a.length,mean=a.reduce((x,y)=>x+y)/n;
+    let ae=0,se=0,pe=0,st=0;
+    a.forEach((v,i)=> {
+        const e=p[i]-v;
+        ae+=Math.abs(e);
+        se+=e*e;
+        pe+=v?Math.abs(e)/v:0;
+        st+=(v-mean)**2
+    }
+    );
+    return {
+        mae:ae/n,rmse:Math.sqrt(se/n),mape:pe/n*100,r2:1-se/st
+    }
+}
+const S= {
+    mv:-1,ci:-1,hz:14,view:'dashboard',hid:new Set(),first:true
+}
+;
+/* ---------- filters ---------- */
+function fill(el,list,all) {
+    el.innerHTML=(all?`<option value="-1">${all}</option>`:'')+list.map((x,i)=>`<option value="${i}">${x.n}</option>`).join('')
+}
+fill($('#fm'),M,'All movies');
+fill($('#fc'),C,'All cinemas');
+fill($('#pm'),M);
+fill($('#pc'),C);
+$('#asof').textContent=lab(0);
+const pd=$('#pd');
+pd.min=dt(0).toISOString().slice(0,10);
+pd.max=dt(14).toISOString().slice(0,10);
+pd.value=dt(1).toISOString().slice(0,10);
+['fm','fc','fh'].forEach(id=>$('#'+id).addEventListener('change',()=> {
+    S.mv=+$('#fm').value;
+    S.ci=+$('#fc').value;
+    S.hz=+$('#fh').value;
+    render()
+}
+));
+/* ---------- routing ---------- */
+const TITLES= {
+    dashboard:['Demand overview','Ticket demand, occupancy and forecasts for your screens.'],forecast:['Forecast a showing','Estimate tickets and occupancy for one movie, cinema and showtime.'],models:['Model comparison','How each model performed against actual ticket sales over the last 28 days.']
+}
+;
+function route() {
+    const v=(location.hash||'#dashboard').slice(1);
+    S.view=TITLES[v]?v:'dashboard';
+    document.querySelectorAll('nav a').forEach(a=>a.getAttribute('href')==='#'+S.view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+    document.querySelectorAll('.vis').forEach(e=>e.classList.toggle('on',e.id==='v-'+S.view));
+    $('#title').textContent=TITLES[S.view][0];
+    $('#subtitle').textContent=TITLES[S.view][1];
+    $('#filters').style.display=S.view==='forecast'?'none':'flex';
+    $('#fh').parentElement.style.display=S.view==='dashboard'?'flex':'none';
+    render()
+}
+addEventListener('hashchange',route);
+/* ---------- dashboard ---------- */
+function kpis() {
+    let f=0,l=0;
+    for(let d=1;
+    d<=7;
+    d++)f+=ser('xgb',d);
+    for(let d=-6;
+    d<=0;
+    d++)l+=ser('act',d);
+    const dl=(f-l)/l*100,occ=f/(cap()*7)*100,m=Object.fromEntries(['rf','xgb','base'].map(k=>[k,metrics(k)]));
+    const best=Object.keys(m).sort((a,b)=>m[a].mape-m[b].mape)[0],bn=MOD.find(x=>x.k===best).n;
+    const chip=(v)=>`<span class="chip ${v>=0?'up':'down'}">${v>=0?'UP':'DOWN'} ${Math.abs(v).toFixed(1)}%</span>`;
+    $('#kpis').innerHTML=[
+    ['Tickets, next 7 days',fmt(f),chip(dl)+'vs last 7 days'],
+    ['Projected occupancy',occ.toFixed(1)+'%',S.mv<0?'of seats across selected screens':'share of seats from this title'],
+    ['Projected box office','$'+fmt(f*PRICE),'at $'+PRICE.toFixed(2)+' average ticket'],
+    ['Best model accuracy',(100-m[best].mape).toFixed(1)+'%',bn+', last 28 days']
+    ].map(k=>`<div class="card kpi"><div class="lab">${k[0]}</div><div class="val">${k[1]}</div><div class="note">${k[2]}</div></div>`).join('')
+}
+function legend() {
+    $('#legend').innerHTML=MOD.map(m=>`<button aria-pressed="${!S.hid.has(m.k)}" data-k="${m.k}"><i style="background:${m.c}"></i>${m.n}</button>`).join('');
+    document.querySelectorAll('#legend button').forEach(b=>b.onclick=()=> {
+        S.hid.has(b.dataset.k)?S.hid.delete(b.dataset.k):S.hid.add(b.dataset.k);
+        S.first=false;
+        chart();
+        legend()
+    }
+    )
+}
+function chart() {
+    const W=760,H=300,p= {
+        l:48,r:14,t:14,b:28
+    }
+    ,ds=[];
+    for(let d=-21;
+    d<=S.hz;
+    d++)ds.push(d);
+    const vis=MOD.filter(m=>!S.hid.has(m.k)),data= {
+    }
+    ;
+    MOD.forEach(m=>data[m.k]=ds.map(d=>m.k==='act'&&d>0?null:ser(m.k,d)));
+    const mx=Math.max(10,...vis.flatMap(m=>data[m.k].filter(v=>v!=null)))*1.1,step=Math.pow(10,Math.floor(Math.log10(mx/4))),ty=Math.ceil(mx/4/step)*step,top=ty*4;
+    const X=i=>p.l+i*(W-p.l-p.r)/(ds.length-1),Y=v=>p.t+(1-v/top)*(H-p.t-p.b),z=ds.indexOf(0);
+    let g='';
+    for(let i=0;
+    i<=4;
+    i++) {
+        const y=Y(ty*i);
+        g+=`<line x1="${p.l}" x2="${W-p.r}" y1="${y}" y2="${y}" stroke="#3a2832" stroke-dasharray="3 4"/><text x="${p.l-8}" y="${y+4}" text-anchor="end">${fmt(ty*i)}</text>`
+    }
+    ds.forEach((d,i)=> {
+        if(i%Math.ceil(ds.length/9)===0)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle">${lab(d)}</text>`
+    }
+    );
+    const paths=vis.map(m=> {
+        let s='',pen=false;
+        data[m.k].forEach((v,i)=> {
+            if(v==null)return;
+            s+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);
+            pen=true
+        }
+        );
+        return `<path class="${m.k==='act'&&S.first?'draw':''}" d="${s}" fill="none" stroke="${m.c}" stroke-width="${m.k==='act'?2.6:2}" stroke-linejoin="round" ${m.k==='base'?'stroke-dasharray="6 4"':''}/>`
+    }
+    ).join('');
+    $('#cw').innerHTML=`<svg id="svg" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="Line chart of daily ticket demand: actual sales to today, then forecasts from each model. Use left and right arrow keys to read values.">
+ <g class="axis">${g}</g><rect x="${X(z)}" y="${p.t}" width="${W-p.r-X(z)}" height="${H-p.t-p.b}" fill="#e0b155" opacity=".06"/><text x="${X(z)+8}" y="${p.t+12}" fill="#e0b155" font-size="11">Forecast</text>${paths}
+ <line id="cur" y1="${p.t}" y2="${H-p.b}" stroke="#f2e9da" opacity="0" /><g id="dots"></g></svg><div class="tip" id="tip"></div>`;
+    const svg=$('#svg'),tip=$('#tip');
+    function show(i) {
+        i=Math.max(0,Math.min(ds.length-1,i));
+        const x=X(i);
+        $('#cur').setAttribute('x1',x);
+        $('#cur').setAttribute('x2',x);
+        $('#cur').setAttribute('opacity',.35);
+        $('#dots').innerHTML=vis.filter(m=>data[m.k][i]!=null).map(m=>`<circle cx="${x}" cy="${Y(data[m.k][i])}" r="4" fill="${m.c}"/>`).join('');
+        const rows=vis.filter(m=>data[m.k][i]!=null).map(m=>`<div><span style="color:${m.c}">${m.n}</span><b>${fmt(data[m.k][i])}</b></div>`).join('');
+        tip.innerHTML=`<b>${lab(ds[i])}</b>${ds[i]>0?' (forecast)':''}${rows}`;
+        tip.style.left=(x/W*100)+'%';
+        tip.style.top=(Y(Math.max(...vis.map(m=>data[m.k][i]||0)))/H*100)+'%';
+        tip.style.opacity=1;
+        $('#live').textContent=`${lab(ds[i])}: `+vis.filter(m=>data[m.k][i]!=null).map(m=>`${m.n} ${fmt(data[m.k][i])}`).join(', ')+' tickets.';
+        S.idx=i
+    }
+    svg.addEventListener('pointermove',e=> {
+        const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;
+        show(Math.round((x-p.l)/((W-p.l-p.r)/(ds.length-1))))
+    }
+    );
+    svg.addEventListener('pointerleave',()=> {
+        tip.style.opacity=0;
+        $('#cur').setAttribute('opacity',0);
+        $('#dots').innerHTML=''
+    }
+    );
+    svg.addEventListener('keydown',e=> {
+        if(e.key==='ArrowRight'||e.key==='ArrowLeft') {
+            e.preventDefault();
+            show((S.idx??z)+(e.key==='ArrowRight'?1:-1))
+        }
+    }
+    );
+    svg.addEventListener('blur',()=> {
+        tip.style.opacity=0
+    }
+    )
+}
+function occ() {
+    const W=420,H=300,p= {
+        l:34,r:6,t:14,b:28
+    }
+    ,days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],cp=cap(),A=Array(7).fill(0),F=Array(7).fill(0),na=Array(7).fill(0);
+    for(let d=-27;
+    d<=0;
+    d++) {
+        const w=dt(d).getDay();
+        A[w]+=ser('act',d);
+        na[w]++
+    }
+    for(let d=1;
+    d<=7;
+    d++)F[dt(d).getDay()]+=ser('xgb',d);
+    const a=A.map((v,i)=>v/na[i]/cp*100),f=F.map(v=>v/cp*100),top=Math.max(20,Math.ceil(Math.max(...a,...f)/10)*10),Y=v=>p.t+(1-v/top)*(H-p.t-p.b),bw=(W-p.l-p.r)/7;
+    let s='';
+    for(let i=0;
+    i<=4;
+    i++) {
+        const v=top/4*i;
+        s+=`<line x1="${p.l}" x2="${W-p.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#3a2832" stroke-dasharray="3 4"/><text x="${p.l-6}" y="${Y(v)+4}" text-anchor="end">${Math.round(v)}%</text>`
+    }
+    days.forEach((d,i)=> {
+        const x=p.l+i*bw+bw*.12,w=bw*.34;
+        s+=`<text x="${p.l+i*bw+bw/2}" y="${H-8}" text-anchor="middle">${d}</text>
+ <rect x="${x}" y="${Y(a[i])}" width="${w}" height="${H-p.b-Y(a[i])}" rx="3" fill="#8aa0bd" opacity=".85"><title>${d} last 4 weeks: ${a[i].toFixed(1)}%</title></rect>
+ <rect x="${x+w+3}" y="${Y(f[i])}" width="${w}" height="${H-p.b-Y(f[i])}" rx="3" fill="#e0b155"><title>${d} forecast: ${f[i].toFixed(1)}%</title></rect>`
+    }
+    );
+    $('#occ').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Occupancy by weekday. Busiest forecast day: ${days[f.indexOf(Math.max(...f))]} at ${Math.max(...f).toFixed(0)} percent."><g class="axis">${s}</g></svg>
+ <div class="legend" style="margin-top:8px"><span class="chip"><i style="background:#8aa0bd;width:9px;height:9px;border-radius:50%;display:inline-block"></i> Last 4 weeks</span><span class="chip"><i style="background:#e0b155;width:9px;height:9px;border-radius:50%;display:inline-block"></i> Next week</span></div>`
+}
+/* ---------- models ---------- */
+function models() {
+    const ks=['rf','xgb','base'],m=Object.fromEntries(ks.map(k=>[k,metrics(k)])),best=ks.slice().sort((a,b)=>m[a].mape-m[b].mape)[0];
+    $('#mt').innerHTML=`<caption>Lower is better for MAE, RMSE and MAPE. Higher is better for R².</caption><thead><tr><th scope="col">Model</th><th scope="col">MAE</th><th scope="col">RMSE</th><th scope="col">MAPE</th><th scope="col">R²</th></tr></thead><tbody>`+
+    ks.map(k=>`<tr class="${k===best?'best':''}"><td>${MOD.find(x=>x.k===k).n}${k===best?' (best)':''}</td><td>${m[k].mae.toFixed(1)}</td><td>${m[k].rmse.toFixed(1)}</td><td>${m[k].mape.toFixed(1)}%</td><td>${m[k].r2.toFixed(3)}</td></tr>`).join('')+'</tbody>';
+    $('#mb').innerHTML=ks.map(k=> {
+        const c=MOD.find(x=>x.k===k),acc=100-m[k].mape;
+        return `<div class="bar"><span>${c.n}</span><span class="t"><i style="width:${Math.max(2,acc)}%;background:${c.c}"></i></span><b>${acc.toFixed(1)}%</b></div>`
+    }
+    ).join('');
+    const imp=(m.base.mape-m[best].mape)/m.base.mape*100;
+    $('#mn').textContent=`${MOD.find(x=>x.k===best).n} cuts error by ${imp.toFixed(0)}% against the historical baseline for this selection. The label (best) marks the best model.`
+}
+/* ---------- prediction form ---------- */
+$('#form').addEventListener('submit',()=> {
+    const m=+$('#pm').value,c=+$('#pc').value,d=Math.round((new Date($('#pd').value+'T00:00')-TODAY)/864e5),share=+$('#pt').value,sc=Math.max(1,Math.min(4,+$('#ps').value||1)),price=+$('#pp').value||12,promo=$('#pr').checked,hol=$('#ph').checked;
+    const out=$('#out');
+    out.innerHTML='<div class="results"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+    setTimeout(()=> {
+        const e=exp(m,c,d);
+        if(!e) {
+            out.innerHTML=`<div class="card" style="margin-top:14px"><b>${M[m].n}</b> is not in cinemas on ${lab(d)}. Choose a date on or after its release (${lab(M[m].rel)}).</div>`;
+            return
+        }
+        const adj=Math.max(.5,1-.03*(price-12))*(promo?1.07:1)*(hol?1.15:1),cp=sc*C[c].seats,seed=d+m*7+c*3;
+        const est= {
+            rf:e*share*adj*(1+.04*nz(seed,1,2)),xgb:e*share*adj*(1+.02*nz(seed,3,4)),base:exp(m,c,d-7)*share
+        }
+        ;
+        const err= {
+            rf:.09,xgb:.06,base:.2
+        }
+        ;
+        const best=est.xgb;
+        out.innerHTML=`<div class="results">`+['xgb','rf','base'].map(k=> {
+            const v=est[k],o=Math.min(100,v/cp*100),n=MOD.find(x=>x.k===k).n;
+            return `<div class="card res ${k==='xgb'?'rec':''}">${k==='xgb'?'<div class="tag">Recommended</div>':'<div class="tag" style="color:var(--mute)">&nbsp;</div>'}<div class="lab" style="color:var(--mute)">${n}</div><div class="big">${fmt(v)} <span style="font:15px var(--sans);color:var(--mute)">tickets</span></div>
+   <div>Range ${fmt(v*(1-err[k]))}–${fmt(v*(1+err[k]))}</div><div class="${o>=95?'down':''}" style="margin-top:4px">Occupancy ${o.toFixed(0)}% of ${cp} seats${o>=95?' · sell-out risk':''}</div>${k==='base'?'<div style="color:var(--mute);font-size:13px;margin-top:6px">Ignores price, promotion and holiday effects.</div>':''}</div>`
+        }
+        ).join('')+
+        `</div><div class="card" style="margin-top:14px">For ${M[m].n} at ${C[c].n} on ${lab(d)}, XGBoost expects ${fmt(best)} tickets, about ${Math.min(100,best/cp*100).toFixed(0)}% occupancy. ${best/cp>.9?'Consider adding a screen or a later showing.':best/cp<.4?'Consider moving this showing to a smaller screen.':'Your current screen allocation looks right.'}</div>`
+    }
+    ,550)
+}
+);
+function render() {
+    if(S.view==='dashboard') {
+        kpis();
+        legend();
+        chart();
+        occ()
+    }
+    if(S.view==='models')models()
+}
+route();
+  </script>
+ </body>
+</html>
