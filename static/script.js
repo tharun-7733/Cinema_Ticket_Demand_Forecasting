@@ -95,13 +95,13 @@ async function init() {
   const pdEl = document.getElementById("pd");
   if (pdEl) pdEl.value = today;
 
-  // 1. Health check & model version
-  try {
-    const health = await apiGet("/health");
-    $("#apiStatus").innerHTML = `<span class="up">● Live</span> · ${health.model_version} (${health.n_estimators} trees)`;
-  } catch {
-    $("#apiStatus").innerHTML = `<span class="down">● Offline</span> · Cannot reach API`;
-  }
+  // // 1. Health check & model version
+  // try {
+  //   const health = await apiGet("/health");
+  //   $("#apiStatus").innerHTML = `<span class="up">Live</span> · ${health.model_version} (${health.n_estimators} trees)`;
+  // } catch {
+  //   $("#apiStatus").innerHTML = `<span class="down">● Offline</span> · Cannot reach API`;
+  // }
 
   // 2. Fetch options directly from trained model categories
   try {
